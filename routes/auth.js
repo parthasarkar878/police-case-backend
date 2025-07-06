@@ -8,12 +8,19 @@ const router = express.Router();
 // LOGIN route
 router.post("/login", async (req, res) => {
     const { userId, password } = req.body;
-
+    console.log("LOGIN ATTEMPT:", userId, password);   // <<== debug add
     try {
         const user = await User.findOne({ userId });
-        if (!user) return res.status(400).json({ msg: "User not found" });
+        console.log("USER FOUND:", user);               // <<== debug add
+
+        if (!user) {
+            console.log("NO USER FOUND IN DB");         // <<== debug add
+            return res.status(400).json({ msg: "User not found" });
+        }
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
+        console.log("PASSWORD MATCH:", isMatch);        // <<== debug add
+
         if (!isMatch) return res.status(400).json({ msg: "Invalid password" });
 
         const token = jwt.sign(
@@ -24,6 +31,7 @@ router.post("/login", async (req, res) => {
 
         res.json({ token, role: user.role });
     } catch (err) {
+        console.error("LOGIN ERROR:", err.message);
         res.status(500).send("Server error");
     }
 });
@@ -45,7 +53,7 @@ router.post("/register", async (req, res) => {
         await newUser.save();
         res.json({ msg: "User created successfully" });
     } catch (err) {
-        console.error(err.message);
+        console.error("REGISTER ERROR:", err.message);
         res.status(500).send("Server error");
     }
 });
